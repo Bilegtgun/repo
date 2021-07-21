@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>messenger</title>
+    <link rel="stylesheet" href="messenger.css" />
+</head>
+
+<body>
+    <input id="inp" class="input" type="text" placeholder="...">
+    <button onclick="send()">send</button>
+    <div class="msg" id="msg">
+    </div>
+    <input type="file" id="file">
+    <button onclick="upload()">Upload file</button>
+</body>
+<script src="https://www.gstatic.com/firebasejs/8.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.7.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+
+<script>
+    var firebaseConfig = {
+        apiKey: "AIzaSyAjVut_g6tIAWBknczQ4XN7ubPRNq26g9w",
+        authDomain: "project-ff003.firebaseapp.com",
+        projectId: "project-ff003",
+        storageBucket: "project-ff003.appspot.com",
+        messagingSenderId: "726649080688",
+        appId: "1:726649080688:web:00ea6567eb526ebead9db5",
+        measurementId: "G-N5C0Z2PNKS"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storageRef = firebase.storage().ref();
+    let inp = document.getElementById("inp");
+    let inp2 = document.getElementById("file");
+    let b = document.getElementById("msg");
+    db.collection('msg').orderBy('time', 'asc').onSnapshot(docs => {
+        b.innerHTML = ""
+        docs.forEach(doc => {
+            let ma = document.createElement("div");
+            ma.innerHTML = doc.data().text;
+            b.appendChild(ma);
+            inp.value = "";
+            let c = "del";
+            let del = document.createElement("button");
+            del.innerHTML = c;
+            b.appendChild(del);
+            del.onclick = () => {
+                db.collection("msg").doc(doc.id).delete()
+            }
+        })
+    })
+    function send() {
+        let m = inp.value;
+        db.collection('msg').add({
+            text: m,
+            time: firebase.firestore.FieldValue.serverTimestamp()
+        })
+    }
+    const upload = () => {
+        let file = document.getElementById('file').files[0];
+        let fileRef = storageRef.child('images/'+file.name);
+        fileRef.put(file).then((snapshot) => {
+            console.log("aa")
+            snapshot.ref.getDownloadURL().then(url => {
+                console.log(url)
+                db.collection('photos').add({
+                    url: url
+                })
+            })
+
+        })
+    }
+
+    
+</script>
+
+</html>
